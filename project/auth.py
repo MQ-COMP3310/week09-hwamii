@@ -21,7 +21,7 @@ def login_post():
 
     # check if the user actually exists
     # take the user-supplied password and compare it with the stored password
-    if not user or (user.password != password):  #changed from user.password == password to user.password != password
+    if not user or not (user.password == password):  #changed from user.password == password to user.password != password
         flash('Please check your login details and try again.')
         app.logger.warning("User login failed")
         return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
@@ -42,12 +42,13 @@ def signup_post():
 
     # this is unsafe because its concatenating user input directly
     # user = db.session.execute(text('select * from user where email = "' + email +'"')).all()
+    # user = User.query.filter_by(email=email).first()
 
     # instead, use parameterised queries
-    # user = db.session.execute(text('select * from user where email = :email'), {'email': email}).all()
+    user = db.session.execute(text('select * from user where email = :email'), {'email': email}).all()
     # or
-    statement = text("SELECT * FROM user WHERE email = :email")
-    user = db.session.execute(statement, {'email': email}).all()
+    # statement = text("SELECT * FROM user WHERE email = :email")
+    # user = db.session.execute(statement, {'email': email}).all()
 
 
     if len(user) > 0: # if a user is found, we want to redirect back to signup page so user can try again
@@ -56,10 +57,10 @@ def signup_post():
         return redirect(url_for('auth.signup'))
 
     # create a new user with the form data. TODO: Hash the password so the plaintext version isn't saved.
-    hash_password = generate_generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
-    new_user = User(email=email, name=name, password=hash_password)
+    # hash_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
+    # new_user = User(email=email, name=name, password=hash_password)
     # old unsafe method
-    # new_user = User(email=email, name=name, password=password)
+    new_user = User(email=email, name=name, password=password)
 
     # add the new user to the database
     db.session.add(new_user)
